@@ -278,6 +278,17 @@ export default function Home() {
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">اسم المستخدم في التيليجرام <span className="text-slate-500">(اختياري)</span></label>
+                    <input
+                      type="text"
+                      value={contactForm.telegramUsername || ''}
+                      onChange={(e) => setContactForm({ ...contactForm, telegramUsername: e.target.value })}
+                      placeholder="مثال: @yourname"
+                      className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 text-white placeholder-slate-600 text-sm"
+                    />
+                  </div>
+
                   <button
                     type="submit"
                     disabled={contactLoading}

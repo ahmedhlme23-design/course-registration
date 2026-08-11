@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request) {
   try {
-    const { name, message } = await request.json();
+    const { name, message, telegramUsername, telegramChatId } = await request.json();
 
     if (!name || !message) {
       return NextResponse.json({ error: 'الاسم ونص الرسالة مطلوبان' }, { status: 400 });
@@ -20,8 +20,18 @@ export async function POST(request) {
         reply TEXT,
         status VARCHAR(20) DEFAULT 'pending',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        replied_at TIMESTAMP WITH TIME ZONE
+        replied_at TIMESTAMP WITH TIME ZONE,
+        telegram_username VARCHAR(255),
+        telegram_chat_id VARCHAR(100),
+        source VARCHAR(50) DEFAULT 'web'
       );
+    `;
+
+    await sql`
+      ALTER TABLE tickets
+      ADD COLUMN IF NOT EXISTS telegram_username VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS telegram_chat_id VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'web';
     `;
 
     // توليد معرف فريد عشوائي للتذكرة (UUID)
@@ -30,8 +40,8 @@ export async function POST(request) {
 
     // 2. حفظ التذكرة
     await sql`
-      INSERT INTO tickets (ticket_id, name, message)
-      VALUES (${ticketId}, ${name}, ${message});
+      INSERT INTO tickets (ticket_id, name, message, telegram_username, telegram_chat_id, source)
+      VALUES (${ticketId}, ${name}, ${message}, ${telegramUsername || null}, ${telegramChatId || null}, 'web');
     `;
 
     // 3. التوقيت والتاريخ
@@ -67,7 +77,10 @@ ${message}
 ${ticketUrl}
 
 📅 *التاريخ:* ${formattedDate}
-⏰ *الوقت:* ${formattedTime}`;
+⏰ *الوقت:* ${formattedTime}
+
+📌 *للرد على هذه التذكرة عبر التيليجرام:* 
+اكتب \\`@${ticketId} رسالتك\\``;
 
       await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         chat_id: chatId,
