@@ -6,7 +6,6 @@ export async function POST(request) {
   try {
     const { name, phone, governorate, city, street, college, grade } = await request.json();
 
-    // التحقق الفعلي في الخلفية
     if (!name || !phone || !governorate || !city || !college || !grade) {
       return NextResponse.json({ error: 'جميع الحقول الأساسية مطلوبة' }, { status: 400 });
     }
@@ -15,7 +14,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'رقم الهاتف يجب أن يتكون من 11 رقماً بالضبط' }, { status: 400 });
     }
 
-    // تجميع حقل العنوان
     const fullAddress = street 
       ? `محافظة ${governorate} - مدينة ${city} - شارع ${street}`
       : `محافظة ${governorate} - مدينة ${city}`;
@@ -42,7 +40,24 @@ export async function POST(request) {
 
     const registrationId = result.rows[0].id;
 
-    // 3. إرسال إشعار التليجرام
+    // 3. استخراج وتنسيق الوقت والتاريخ بتوقيت مصر
+    const now = new Date();
+    
+    const formattedDate = new Intl.DateTimeFormat('ar-EG', {
+      timeZone: 'Africa/Cairo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(now);
+
+    const formattedTime = new Intl.DateTimeFormat('ar-EG', {
+      timeZone: 'Africa/Cairo',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    }).format(now);
+
+    // 4. إرسال إشعار التليجرام
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
 
@@ -55,7 +70,10 @@ export async function POST(request) {
 📞 *الهاتف:* ${phone}
 📍 *العنوان:* ${fullAddress}
 🎓 *الكلية:* ${college}
-📊 *التقدير العام:* ${grade}`;
+📊 *التقدير العام:* ${grade}
+
+📅 *التاريخ:* ${formattedDate}
+⏰ *الوقت:* ${formattedTime}`;
 
       await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         chat_id: chatId,
