@@ -10,7 +10,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'جميع الحقول مطلوبة' }, { status: 400 });
     }
 
-    // إنشاء الجدول تلقائياً إن لم يكن موجوداً
+    // 1. إنشاء الجدول إن لم يكن موجوداً
     await sql`
       CREATE TABLE IF NOT EXISTS registrations (
         id SERIAL PRIMARY KEY,
@@ -23,19 +23,24 @@ export async function POST(request) {
       );
     `;
 
-    // حفظ البيانات في Vercel Postgres
-    await sql`
+    // 2. إدراج البيانات مع إرجاع الرقم التسلسلي (id) الجديد
+    const result = await sql`
       INSERT INTO registrations (name, phone, address, college, grade)
-      VALUES (${name}, ${phone}, ${address}, ${college}, ${grade});
+      VALUES (${name}, ${phone}, ${address}, ${college}, ${grade})
+      RETURNING id;
     `;
 
-    // إرسال التنبيه لجروب التليجرام
+    // استخراج رقم العملية التسلسلي
+    const registrationId = result.rows[0].id;
+
+    // 3. إرسال التنبيه لجروب التليجرام مضافاً إليه رقم العملية
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
 
     if (botToken && chatId) {
       const message = 
 `🎯 *تسجيل جديد في الدورة!*
+🔢 *رقم العملية:* #${registrationId}
 
 👤 *الاسم:* ${name}
 📞 *الهاتف:* ${phone}
@@ -50,7 +55,11 @@ export async function POST(request) {
       });
     }
 
-    return NextResponse.json({ message: 'تم التسجيل بنجاح' }, { status: 200 });
+    return NextResponse.json({ 
+      message: 'تم التسجيل بنجاح', 
+      registrationId: registrationId 
+    }, { status: 200 });
+
   } catch (error) {
     console.error('Error:', error);
     return NextResponse.json({ error: 'حدث خطأ في الخادم' }, { status: 500 });
