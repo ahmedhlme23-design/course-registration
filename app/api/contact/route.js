@@ -65,22 +65,23 @@ export async function POST(request) {
     const chatId = process.env.TELEGRAM_CHAT_ID;
 
     if (botToken && chatId) {
-      const telegramMsg = 
-`📩 *رسالة تواصل جديدة!*
-🎫 *رقم التذكرة:* \`${ticketId}\`
-
-👤 *المرسل:* ${name}
-💬 *الرسالة:* 
-${message}
-
-🔗 *رابط متابعة التذكرة:*
-${ticketUrl}
-
-📅 *التاريخ:* ${formattedDate}
-⏰ *الوقت:* ${formattedTime}
-
-📌 *للرد على هذه التذكرة عبر التيليجرام:* 
-اكتب \\`@${ticketId} رسالتك\\``;
+      const telegramMsg = [
+        '📩 *رسالة تواصل جديدة!*',
+        `🎫 *رقم التذكرة:* \`${ticketId}\``,
+        '',
+        `👤 *المرسل:* ${name}`,
+        '💬 *الرسالة:*',
+        message,
+        '',
+        '🔗 *رابط متابعة التذكرة:*',
+        ticketUrl,
+        '',
+        `📅 *التاريخ:* ${formattedDate}`,
+        `⏰ *الوقت:* ${formattedTime}`,
+        '',
+        '📌 *للرد على هذه التذكرة عبر التيليجرام:*',
+        `اكتب \`@${ticketId} رسالتك\``,
+      ].join('\n');
 
       await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         chat_id: chatId,
