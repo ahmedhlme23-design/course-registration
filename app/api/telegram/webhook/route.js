@@ -77,13 +77,13 @@ export async function POST(request) {
 
       await sql`
         UPDATE tickets
-        SET reply = ${replyText}, status = 'replied', replied_at = CURRENT_TIMESTAMP, telegram_chat_id = ${String(chatId)}
+        SET reply = ${replyText}, status = 'replied', replied_at = CURRENT_TIMESTAMP
         WHERE ticket_id = ${ticketId};
       `;
 
       await sendTelegramMessage(chatId, `✅ تم إرسال الرد إلى التذكرة #${ticketId}\n\n${replyText}`);
 
-      if (ticket.telegram_chat_id) {
+      if (ticket.telegram_chat_id && String(ticket.telegram_chat_id) !== String(chatId)) {
         await sendTelegramMessage(ticket.telegram_chat_id, `📩 رد من الإدارة على تذكرتك #${ticketId}\n\n${replyText}`);
       }
 
