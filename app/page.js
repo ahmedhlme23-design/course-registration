@@ -66,6 +66,10 @@ export default function Home() {
 
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: '', msg: '' });
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [contactForm, setContactForm] = useState({ name: '', message: '' });
+  const [contactLoading, setContactLoading] = useState(false);
+  const [contactStatus, setContactStatus] = useState({ type: '', msg: '' });
 
   const handlePhoneChange = (e) => {
     const value = e.target.value.replace(/\D/g, '');
@@ -113,6 +117,40 @@ export default function Home() {
       setStatus({ type: 'error', msg: 'تعذر الاتصال بالخادم.' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    setContactLoading(true);
+    setContactStatus({ type: '', msg: '' });
+
+    if (!contactForm.name.trim() || !contactForm.message.trim()) {
+      setContactStatus({ type: 'error', msg: 'يجب إدخال الاسم ونص الرسالة.' });
+      setContactLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contactForm),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setContactStatus({ type: 'success', msg: 'تم إرسال رسالتك بنجاح، وسيتم مراجعتها قريباً.' });
+        setContactForm({ name: '', message: '' });
+        setShowContactForm(false);
+      } else {
+        setContactStatus({ type: 'error', msg: data.error || 'حدث خطأ أثناء إرسال الرسالة.' });
+      }
+    } catch (err) {
+      setContactStatus({ type: 'error', msg: 'تعذر الاتصال بالخادم.' });
+    } finally {
+      setContactLoading(false);
     }
   };
 
@@ -186,6 +224,55 @@ export default function Home() {
               >
                 <span>📜 خطوات التسجيل في التربوي</span>
               </button>
+            </div>
+
+            <div className="max-w-xl mx-auto pt-2">
+              <button
+                onClick={() => setShowContactForm((prev) => !prev)}
+                className="w-full sm:w-auto px-6 py-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-300 font-semibold hover:bg-blue-500/20 transition-all"
+              >
+                📩 اترك رسالة للإدارة
+              </button>
+
+              {showContactForm && (
+                <form onSubmit={handleContactSubmit} className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-right space-y-3 shadow-lg">
+                  {contactStatus.msg && (
+                    <div className={`rounded-xl p-3 text-sm ${contactStatus.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                      {contactStatus.msg}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">الاسم</label>
+                    <input
+                      type="text"
+                      value={contactForm.name}
+                      onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                      placeholder="أدخل اسمك"
+                      className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 text-white placeholder-slate-600 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">نص الرسالة</label>
+                    <textarea
+                      rows="4"
+                      value={contactForm.message}
+                      onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                      placeholder="اكتب رسالتك هنا..."
+                      className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 text-white placeholder-slate-600 text-sm"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={contactLoading}
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3 rounded-xl transition duration-200 disabled:opacity-50"
+                  >
+                    {contactLoading ? 'جاري الإرسال...' : 'إرسال الرسالة'}
+                  </button>
+                </form>
+              )}
             </div>
 
             {/* مميزات سريعة */}
