@@ -9,13 +9,16 @@ export async function POST(request) {
 
   try {
     const { ticketId, reply } = await request.json();
+
     await sql`
       UPDATE tickets 
       SET reply = ${reply}, status = 'replied', replied_at = CURRENT_TIMESTAMP
       WHERE ticket_id = ${ticketId};
     `;
+
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {
+    console.error('Admin reply error:', err);
     return NextResponse.json({ error: 'خطأ خادم' }, { status: 500 });
   }
 }

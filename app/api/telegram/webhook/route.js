@@ -81,11 +81,7 @@ export async function POST(request) {
         WHERE ticket_id = ${ticketId};
       `;
 
-      await sendTelegramMessage(chatId, `✅ تم إرسال الرد إلى التذكرة #${ticketId}\n\n${replyText}`);
-
-      if (ticket.telegram_chat_id && String(ticket.telegram_chat_id) !== String(chatId)) {
-        await sendTelegramMessage(ticket.telegram_chat_id, `📩 رد من الإدارة على تذكرتك #${ticketId}\n\n${replyText}`);
-      }
+      await sendTelegramMessage(chatId, `✅ تم حفظ الرد في التذكرة #${ticketId} وسيظهر للمستخدم في صفحة التذكرة.`);
 
       return NextResponse.json({ ok: true });
     }

@@ -283,7 +283,11 @@ export default function Home() {
                     <input
                       type="text"
                       value={contactForm.telegramUsername || ''}
-                      onChange={(e) => setContactForm({ ...contactForm, telegramUsername: e.target.value })}
+                      onChange={(e) => {
+                        const raw = e.target.value.trim();
+                        const clean = raw.startsWith('@') ? raw.slice(1) : raw;
+                        setContactForm({ ...contactForm, telegramUsername: clean });
+                      }}
                       placeholder="مثال: @yourname"
                       className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 text-white placeholder-slate-600 text-sm"
                     />
