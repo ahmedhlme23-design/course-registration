@@ -4,11 +4,21 @@ import axios from 'axios';
 
 export async function POST(request) {
   try {
-    const { name, phone, address, college, grade } = await request.json();
+    const { name, phone, governorate, city, street, college, grade } = await request.json();
 
-    if (!name || !phone || !address || !college || !grade) {
-      return NextResponse.json({ error: 'جميع الحقول مطلوبة' }, { status: 400 });
+    // التحقق الفعلي في الخلفية
+    if (!name || !phone || !governorate || !city || !college || !grade) {
+      return NextResponse.json({ error: 'جميع الحقول الأساسية مطلوبة' }, { status: 400 });
     }
+
+    if (phone.length !== 11 || !/^\d+$/.test(phone)) {
+      return NextResponse.json({ error: 'رقم الهاتف يجب أن يتكون من 11 رقماً بالضبط' }, { status: 400 });
+    }
+
+    // تجميع حقل العنوان
+    const fullAddress = street 
+      ? `محافظة ${governorate} - مدينة ${city} - شارع ${street}`
+      : `محافظة ${governorate} - مدينة ${city}`;
 
     // 1. إنشاء الجدول إن لم يكن موجوداً
     await sql`
@@ -23,17 +33,16 @@ export async function POST(request) {
       );
     `;
 
-    // 2. إدراج البيانات مع إرجاع الرقم التسلسلي (id) الجديد
+    // 2. إدراج البيانات
     const result = await sql`
       INSERT INTO registrations (name, phone, address, college, grade)
-      VALUES (${name}, ${phone}, ${address}, ${college}, ${grade})
+      VALUES (${name}, ${phone}, ${fullAddress}, ${college}, ${grade})
       RETURNING id;
     `;
 
-    // استخراج رقم العملية التسلسلي
     const registrationId = result.rows[0].id;
 
-    // 3. إرسال التنبيه لجروب التليجرام مضافاً إليه رقم العملية
+    // 3. إرسال إشعار التليجرام
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
 
@@ -44,7 +53,7 @@ export async function POST(request) {
 
 👤 *الاسم:* ${name}
 📞 *الهاتف:* ${phone}
-📍 *العنوان:* ${address}
+📍 *العنوان:* ${fullAddress}
 🎓 *الكلية:* ${college}
 📊 *التقدير العام:* ${grade}`;
 
